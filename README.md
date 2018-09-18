@@ -27,7 +27,7 @@ $ cmake --build .
 Debug build:
 ```bash
 $ mkdir -p build/debug
-$ cd build/release
+$ cd build/debug
 $ cmake ../.. -DCMAKE_BUILD_TYPE=Debug
 $ cmake --build .
 ```
