@@ -37,7 +37,9 @@ int main(int argc, char *argv[])
 						 { argv + 1, argv + argc },
 						 true,               // show help if requested
 						 "MotherDimas V0.1"); // version string
-
+	if (args["--verbose"].asBool()) {
+		std::cout << "Verbose!" << std::endl;
+	}
 	std::cout << "Hello!" << std::endl;
     return 0;
 }
