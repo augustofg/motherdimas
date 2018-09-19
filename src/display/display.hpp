@@ -18,12 +18,12 @@ namespace display
 		virtual void render(SDL_Renderer* grender, SDL_Texture* textures[], int pos x, int pos y);
 	};
 
-	class Renderer
+	class Render
 	{
 	public:
-		Renderer(int dim_x, int dim_y);
+		Render(int dim_x, int dim_y);
 		void update_screen(const std::vector<GraphicObject>& obj_list);
-		~Renderer();
+		~Render();
 	}
 }
 
