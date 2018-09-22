@@ -21,5 +21,8 @@ list(APPEND motherdimas_src_files src/input/input.cpp)
 # Interactions source files
 list(APPEND motherdimas_src_files src/interactions/interactions.cpp)
 
+# Log and debug messages source files
+list(APPEND motherdimas_src_files src/utils/msglog.cpp)
+
 add_executable(motherdimas src/main.cpp ${motherdimas_src_files})
 target_link_libraries(motherdimas ${SLD2_LIBRARIES} docopt_s)
