@@ -6,22 +6,27 @@
 #define MSGLOG_HPP_
 
 #include <atomic>
+#include <mutex>
 #include <string>
 
 namespace msglog
 {
 	class msglog
 	{
-		int dbg_level;
+		std::atomic_int32_t dbg_level;
+		std::mutex log_mutex;
 	public:
 		msglog();
 		void set_debug_level(int level);
 		void debug_msg(const std::string& msg, int level);
+		void debug_msg(const char* msg, int level);
 		void warning_msg(const std::string& msg);
+		void warning_msg(const char* msg);
 		void error_msg(const std::string& msg);
+		void error_msg(const char* msg);
 	};
 
-	extern std::atomic<msglog> logmsg;
 }
+extern msglog::msglog logmsg;
 
 #endif

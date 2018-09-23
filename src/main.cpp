@@ -2,6 +2,9 @@
 #include <string>
 
 #include "docopt.h"
+#include "utils/msglog.hpp"
+
+msglog::msglog logmsg;
 
 static const char _USAGE[] =
     R"(MotherDimas.
@@ -37,8 +40,11 @@ int main(int argc, char *argv[])
 						 { argv + 1, argv + argc },
 						 true,               // show help if requested
 						 "MotherDimas V0.1"); // version string
-	if (args["--verbose"].asBool()) {
-		std::cout << "Verbose!" << std::endl;
+
+	if (args["--verbose"].asBool())
+	{
+		logmsg.set_debug_level(0);
+		logmsg.debug_msg("Verbose mode", 0);
 	}
 	std::cout << "Hello!" << std::endl;
     return 0;
