@@ -9,13 +9,14 @@ msglog::msglog logmsg;
 static const char _USAGE[] =
     R"(MotherDimas.
 Usage:
-  __PROGNAME__ [--verbose]
+  __PROGNAME__ --assets-path apath [--verbose]
   __PROGNAME__ (-h | --help)
   __PROGNAME__ --version
 Options:
   -h --help           Show this screen.
   --version           Show version.
-  --verbose           Verbose output for debugging
+  --verbose           Verbose output for debugging.
+  --assets-path apath Set the assets directory.
 )";
 
 void search_and_replace(std::string& str, const std::string& old_str, const std::string& new_str)
@@ -46,6 +47,9 @@ int main(int argc, char *argv[])
 		logmsg.set_debug_level(0);
 		logmsg.debug_msg("Verbose mode", 0);
 	}
+
+	std::string assets_dir = args["--assets-path"].asString();
+
 	std::cout << "Hello!" << std::endl;
     return 0;
 }
