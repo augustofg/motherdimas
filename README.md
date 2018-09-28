@@ -5,7 +5,7 @@ No explanations needed.
 ## How to build
 
 Dependencies:
-* C++11 capable compiler;
+* C++14 capable compiler;
 * cmake;
 * sdl2 library.
 
