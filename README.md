@@ -38,3 +38,6 @@ If your machine has multiple processors cores you can accelerate the build passi
 ```bash
 $ cmake --build . -- -j4 # create up to 4 parallel jobs
 ```
+## Acknowledges
+
+The sound effects ```assets/construction-jackhammer-excavator.wav``` and ```assets/rocket-launch.wav``` are provided by the user InspectorJ and primeval_polypod respectively on [Freesound](https://freesound.org).
