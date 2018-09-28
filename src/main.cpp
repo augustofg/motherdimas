@@ -9,14 +9,14 @@ msglog::msglog logmsg;
 static const char _USAGE[] =
     R"(MotherDimas.
 Usage:
-  __PROGNAME__ --assets-path apath [--verbose]
+  __PROGNAME__ --assets-path apath [--debug-level=<num>]
   __PROGNAME__ (-h | --help)
   __PROGNAME__ --version
 Options:
   -h --help           Show this screen.
   --version           Show version.
-  --verbose           Verbose output for debugging.
   --assets-path apath Set the assets directory.
+  --debug-level=<num> Debug output verbosity level [default: -1].
 )";
 
 void search_and_replace(std::string& str, const std::string& old_str, const std::string& new_str)
@@ -42,9 +42,9 @@ int main(int argc, char *argv[])
 						 true,               // show help if requested
 						 "MotherDimas V0.1"); // version string
 
-	if (args["--verbose"].asBool())
+	if (args["--debug-level"])
 	{
-		logmsg.set_debug_level(0);
+		logmsg.set_debug_level(atoi(args["--debug-level"].asString().c_str()));
 		logmsg.debug_msg("Verbose mode", 0);
 	}
 
