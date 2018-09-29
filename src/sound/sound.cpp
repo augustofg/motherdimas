@@ -13,7 +13,11 @@ namespace sound
 
 	}
 
-	void SoundSample::play_sample_thread(int start_fade_out, int stop_fade_out)
+	/*
+	 * This method run in a diferent thread and is responsible for
+	 * appling the fade out effect
+	 */
+	void SoundSample::play_sample_thread(int start_fade_out, int stop_fade_out, int replay)
 	{
 		if (this->sample == NULL)
 			return;
@@ -23,9 +27,21 @@ namespace sound
 			return;
 
 		std::unique_lock<std::mutex> lk(this->play_mutex);
-		this->channel = Mix_PlayChannel(-1, this->sample, 0);
+		this->channel = Mix_PlayChannel(-1, this->sample, replay);
 
-		if (halt_sound_var.wait_for(lk, start_fade_out*1ms) == std::cv_status::timeout)
+		std::cv_status wait_result;
+
+		if (replay < 0)
+		{
+			halt_sound_var.wait(lk);
+			wait_result = std::cv_status::no_timeout;
+		}
+		else
+		{
+			wait_result = halt_sound_var.wait_for(lk, start_fade_out*1ms);
+		}
+
+		if (wait_result == std::cv_status::timeout)
 		{
 			std::stringstream dbgmsg;
 			dbgmsg << "(0x" << this << ") Sound timeout (fade out)";
@@ -46,6 +62,9 @@ namespace sound
 		}
 	}
 
+	/*
+	 * Load a wav file to memory
+	 */
 	int SoundSample::load_media_file(const std::string &filename)
 	{
 		this->sample = Mix_LoadWAV(filename.c_str());
@@ -56,7 +75,10 @@ namespace sound
 		return 0;
 	}
 
-	int SoundSample::play(int start_fade_out, int stop_fade_out)
+	/*
+	 * Play an audio sample
+	 */
+	int SoundSample::play(int start_fade_out, int stop_fade_out, int replay)
 	{
 		if (this->sample == NULL)
 		{
@@ -69,11 +91,14 @@ namespace sound
 			this->play_thread->join();
 		}
 
-		this->play_thread.reset(new std::thread([this, start_fade_out, stop_fade_out] {this->play_sample_thread(start_fade_out, stop_fade_out);}));
+		this->play_thread.reset(new std::thread([this, start_fade_out, stop_fade_out, replay] {this->play_sample_thread(start_fade_out, stop_fade_out, replay);}));
 
 		return 0;
 	}
 
+	/*
+	 * Stops the audio
+	 */
 	int SoundSample::stop()
 	{
 		if (this->sample == NULL)
@@ -85,8 +110,12 @@ namespace sound
 		return 0;
 	}
 
+	/*
+	 * Clear resources, finishes the play thread
+	 */
 	SoundSample::~SoundSample()
 	{
+		this->stop();
 		if (this->play_thread.get() != nullptr)
 		{
 			this->play_thread->join();

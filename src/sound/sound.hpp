@@ -24,11 +24,11 @@ namespace sound
 		std::condition_variable halt_sound_var;
 		std::unique_ptr<std::thread> play_thread;
 		std::mutex play_mutex;
-		void play_sample_thread(int start_fade_out, int stop_fade_out);
+		void play_sample_thread(int start_fade_out, int stop_fade_out, int replay);
 	public:
 		SoundSample();
 		int load_media_file(const std::string& filename);
-		int play(int start_fade_out, int stop_fade_out);
+		int play(int start_fade_out, int stop_fade_out, int replay = 0);
 		int stop();
 		~SoundSample();
 	};
