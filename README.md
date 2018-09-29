@@ -38,6 +38,15 @@ If your machine has multiple processors cores you can accelerate the build passi
 ```bash
 $ cmake --build . -- -j4 # create up to 4 parallel jobs
 ```
+
+## Running
+
+To run the game you need to inform the path to the assets directory. Supposing your work directory is under ```build/release``` you can specify the assets path in this way:
+
+```bash
+$ ./motherdimas --assets-path ../../assets/
+```
+
 ## Acknowledges
 
 The sound effects ```assets/construction-jackhammer-excavator.wav``` and ```assets/rocket-launch.wav``` are provided by the user InspectorJ and primeval_polypod respectively on [Freesound](https://freesound.org).
