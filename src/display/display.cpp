@@ -2,6 +2,7 @@
 #include <vector>
 #include <sstream>
 #include <random>
+#include <ctime>
 #include "../utils/msglog.hpp"
 #include "display.hpp"
 
@@ -128,7 +129,7 @@ namespace display{
     {
         std::default_random_engine generator;
         std::uniform_int_distribution<int> distribution(0,4095);
-        generator.seed(2299330023);
+        generator.seed((int)time(NULL));
         
         for(int i = 0; i < 1000; i++){
             for(int j = 0; j < 10; j++){
