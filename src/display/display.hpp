@@ -28,8 +28,13 @@ namespace display
         int x;
         int y;
     };
-    
-    
+
+	struct MapPosition
+    {
+        float x;
+        float y;
+    };
+
 	class GraphicObject
 	{
         
@@ -76,8 +81,24 @@ namespace display
         bool loadMedias(std::string path, SDL_Renderer* screenRenderer);
         void initBackGround();
         void render(SDL_Renderer* screenRenderer, int cam_pos_x, int cam_pos_y);
-    };    
-    
+    };
+
+	class Player
+	{
+	private:
+		SDL_Texture* player_texture;
+		MapPosition position;
+		int health = 100;
+		float speed_y = 0;
+	public:
+		Player();
+        bool loadMedias(std::string path, SDL_Renderer* screenRenderer);
+        void render(SDL_Renderer* screenRenderer, int cam_pos_x, int cam_pos_y);
+        MapPosition getPosition();
+        void setPosition(MapPosition pos);
+        float getSpeed();
+        void setSpeed(float speed_y);
+	};
     
 	class ScreenManager 
 	{

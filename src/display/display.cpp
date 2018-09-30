@@ -22,33 +22,83 @@ namespace display{
         this->type = type;
         this->coordinates = coords;
     }
-    
+
     void Block::render(SDL_Renderer* screenRenderer, int cam_pos_x, int cam_pos_y)
     {
-        int effective_x = (this->coordinates.x)*64 - cam_pos_x; 
-        int effective_y = (this->coordinates.y)*64 - cam_pos_y; 
+        int effective_x = (this->coordinates.x)*64 - cam_pos_x;
+        int effective_y = (this->coordinates.y)*64 - cam_pos_y;
         if(effective_x < 640 && effective_y < 640 && effective_x >= -63 && effective_y >= -63){
-        
+
             //Set rendering space and render to screen
             SDL_Rect renderQuad = {effective_x, effective_y, 64, 64};
             SDL_RenderCopy(screenRenderer, texture, NULL, &renderQuad);
         }
     }
-    
+
     MapCoordinates Block::getCoordinates()
     {
         return this->coordinates;
     }
-    
+
     BlockType Block::getType()
     {
         return this->type;
     }
-    
+
     void Block::setType(BlockType newType)
     {
         this->type = newType;
     }
+
+//----------------------------------- Player ---------------------------------------------
+	Player::Player()
+    {
+        this->position = {0.5,-1};
+    }
+
+	bool Player::loadMedias(std::string path, SDL_Renderer* screenRenderer)
+	{
+		std::string filename = path + "/player.png";
+
+		SDL_Surface* loadedSurface = IMG_Load(filename.c_str());
+		SDL_SetColorKey(loadedSurface, SDL_TRUE, SDL_MapRGB(loadedSurface->format, 0xFF, 0, 0xFF));
+
+		this->player_texture = SDL_CreateTextureFromSurface(screenRenderer, loadedSurface);
+		SDL_FreeSurface(loadedSurface);
+		return true;
+	}
+
+    void Player::render(SDL_Renderer* screenRenderer, int cam_pos_x, int cam_pos_y)
+    {
+        int effective_x = (this->position.x)*64 - cam_pos_x;
+        int effective_y = (this->position.y)*64 - cam_pos_y;
+        if(effective_x < 640 && effective_y < 640 && effective_x >= -63 && effective_y >= -63){
+
+            //Set rendering space and render to screen
+            SDL_Rect renderQuad = {effective_x, effective_y, 64, 64};
+            SDL_RenderCopy(screenRenderer, this->player_texture, NULL, &renderQuad);
+		}
+    }
+
+    MapPosition Player::getPosition()
+    {
+        return this->position;
+    }
+
+	float Player::getSpeed()
+	{
+		return this->speed_y;
+	}
+
+	void Player::setPosition(MapPosition pos)
+	{
+		this->position = pos;
+	}
+
+	void Player::setSpeed(float speed_y)
+	{
+		this->speed_y = speed_y;
+	}
 
 //--------------------------------- BACKGROUND ---------------------------------------
 
@@ -84,7 +134,7 @@ namespace display{
         //Return success
         (*texture) = newTexture;
         return (*texture)!= NULL;
-    }    
+    }
     
     bool BackGround::loadMedias(std::string path, SDL_Renderer* screenRenderer)
     {
