@@ -151,6 +151,7 @@ namespace display{
         std::string fileIron = path + "/iron_block.png";
         std::string fileSilver = path + "/silver_block.png";
         std::string fileTin = path + "/tin_block.png";
+        std::string fileHole = path + "/hole_block.png";
         
         if(!loadFromFile(fileDiamond, screenRenderer, &diamond)){
             logmsg.error_msg("Failed to load diamond_block.png texture image!");
@@ -176,7 +177,11 @@ namespace display{
             logmsg.error_msg("Failed to load tin_block.png texture image!");
             success = false;
         }
-        
+        if(!loadFromFile(fileHole, screenRenderer, &hole)){
+            logmsg.error_msg("Failed to load hole_block.png texture image!");
+            success = false;
+        }
+            
         return success;
     }
     
@@ -237,6 +242,48 @@ namespace display{
                 backGrdObj.push_back(std::move(newBlock));
             }
         }        
+    }
+    
+    int BackGround::digHole(int block_pos_x, int block_pos_y)
+    {
+        if(block_pos_x < 0 || block_pos_x >= 10 || block_pos_y < 0 || block_pos_y >= 10000){
+            logmsg.error_msg("There's no block in such position");
+            return 0;
+        }
+        
+        int score;
+        int real_pos = 10*block_pos_y + block_pos_x;
+        BlockType actual_block = this->backGrdObj[real_pos]->getType();
+        
+        switch(actual_block){
+            case Earth:
+            score = 0;
+            break;
+            
+            case Iron:
+            score = 100;
+            break;
+            
+            case Tin:
+            score = 500;
+            break;
+            
+            case Silver:
+            score = 4000;
+            break;
+            
+            case Gold:
+            score = 20000;
+            break;
+            
+            case Diamond:
+            score = 100000;
+            break;           
+        }
+        
+        this->backGrdObj[real_pos]->setType(Hole);
+        this->backGrdObj[real_pos]->setTexture(this->hole);
+        return score;
     }
     
     void BackGround::render(SDL_Renderer* screenRenderer, int cam_pos_x, int cam_pos_y)

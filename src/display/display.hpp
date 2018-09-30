@@ -21,6 +21,7 @@ namespace display
         Silver,
         Gold,
         Diamond,
+        Hole,
     };
     
     struct MapCoordinates
@@ -72,6 +73,7 @@ namespace display
         SDL_Texture* iron;
         SDL_Texture* silver;
         SDL_Texture* tin;
+        SDL_Texture* hole;
         
         std::vector<std::unique_ptr<Block>> backGrdObj;
         
@@ -81,6 +83,7 @@ namespace display
     public:
         bool loadMedias(std::string path, SDL_Renderer* screenRenderer);
         void initBackGround();
+        int digHole(int block_pos_x, int block_pos_y);
         void render(SDL_Renderer* screenRenderer, int cam_pos_x, int cam_pos_y);
     };
 
