@@ -26,7 +26,7 @@ namespace display{
     {
         int effective_x = (this->coordinates.x)*64 - cam_pos_x; 
         int effective_y = (this->coordinates.y)*64 - cam_pos_y; 
-        if(effective_x < 640 && effective_y < 640 && effective_x >= 0 && effective_y >= 0){
+        if(effective_x < 640 && effective_y < 640 && effective_x >= -63 && effective_y >= -63){
         
             //Set rendering space and render to screen
             SDL_Rect renderQuad = {effective_x, effective_y, 64, 64};
