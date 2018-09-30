@@ -7,7 +7,7 @@ No explanations needed.
 Dependencies:
 * C++14 capable compiler;
 * cmake;
-* sdl2 library.
+* sdl2 library (Ubuntu packages: libsdl2-dev libsdl2-ttf-dev libsdl2-mixer-dev libsdl2-image-dev).
 
 First, make sure you have initialized all git submodules:
 ```bash
