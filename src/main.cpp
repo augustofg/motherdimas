@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 
+#include "display/display.hpp"
 #include "docopt.h"
 #include "utils/msglog.hpp"
 
@@ -49,6 +50,78 @@ int main(int argc, char *argv[])
 	}
 
 	std::string assets_dir = args["--assets-path"].asString();
+    
+    using namespace display;
+    
+    ScreenManager manager(640,640);
+    manager.init();
+    SDL_Renderer* gameRenderer = manager.getGameRenderer();
+    
+    BackGround scenario;    
+    scenario.loadMedias(assets_dir, gameRenderer);
+    scenario.initBackGround();
+    
+    Player drill;
+    drill.loadMedias(assets_dir, gameRenderer);
+    
+    int cam_pos_x = 0;
+    int cam_pos_y = -320;
+    
+    MapPosition position;
+    
+    //Main loop flag
+    bool quit = false;
+    //Event handler
+    SDL_Event event;
+
+
+    //While application is running
+    while(!quit){
+        
+        //Handle events on queue
+        while(SDL_PollEvent(&event) != 0){
+            if(event.type == SDL_QUIT){
+                quit = true;
+            }
+            
+            else if(event.type == SDL_KEYDOWN){
+                
+                switch(event.key.keysym.sym){
+                    case SDLK_UP:
+                    cam_pos_y -= 10;
+                    position = drill.getPosition();
+                    position.y -= 10;
+                    drill.setPosition(position);                    
+                    break;
+                        
+                    case SDLK_DOWN:
+                    cam_pos_y += 10;
+                    position = drill.getPosition();
+                    position.y += 10;
+                    drill.setPosition(position);
+                    break;
+                        
+                    case SDLK_LEFT:
+                    position = drill.getPosition();
+                    position.x -= 10;
+                    drill.setPosition(position);
+                    break;
+                        
+                    case SDLK_RIGHT:
+                    position = drill.getPosition();
+                    position.x += 10;
+                    drill.setPosition(position);
+                    break;
+                }
+            }
+        }
+        
+        manager.clearScreen();
+        scenario.render(gameRenderer, cam_pos_x, cam_pos_y);
+        drill.render(gameRenderer, cam_pos_x, cam_pos_y);
+        manager.updateScreen();         
+    }
+    
 
 	std::cout << "Hello!" << std::endl;
     return 0;

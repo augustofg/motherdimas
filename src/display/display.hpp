@@ -58,6 +58,7 @@ namespace display
         BlockType getType();
         MapCoordinates getCoordinates();
         void setType(BlockType newType);
+        void setTexture(SDL_Texture* texture);
     };
     
     

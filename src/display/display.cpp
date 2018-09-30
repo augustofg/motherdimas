@@ -49,11 +49,16 @@ namespace display{
     {
         this->type = newType;
     }
+    
+    void Block::setTexture(SDL_Texture* texture)
+    {
+        this->texture = texture;
+    }
 
 //----------------------------------- Player ---------------------------------------------
 	Player::Player()
     {
-        this->position = {0.5,-1};
+        this->position = {0.5,-64};
     }
 
 	bool Player::loadMedias(std::string path, SDL_Renderer* screenRenderer)
@@ -70,8 +75,8 @@ namespace display{
 
     void Player::render(SDL_Renderer* screenRenderer, int cam_pos_x, int cam_pos_y)
     {
-        int effective_x = (this->position.x)*64 - cam_pos_x;
-        int effective_y = (this->position.y)*64 - cam_pos_y;
+        int effective_x = (this->position.x) - cam_pos_x;
+        int effective_y = (this->position.y) - cam_pos_y;
         if(effective_x < 640 && effective_y < 640 && effective_x >= -63 && effective_y >= -63){
 
             //Set rendering space and render to screen
