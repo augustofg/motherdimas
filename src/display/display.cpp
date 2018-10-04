@@ -16,25 +16,33 @@ namespace display{
     }
     
 //----------------------------------- BLOCK ---------------------------------------------
+    
+    //Block class constructor, initializes all of it's atributes
     Block::Block(SDL_Texture* texture, BlockType type, MapCoordinates coords)
     {
         this->texture = texture;
         this->type = type;
         this->coordinates = coords;
     }
-
+    
+    //Class responsible for render a block on the screen, given the coordinates of the game's camera
     void Block::render(SDL_Renderer* screenRenderer, int cam_pos_x, int cam_pos_y)
     {
+        //Calculates the effective coordinates of the block, relative to the camera position
         int effective_x = (this->coordinates.x)*64 - cam_pos_x;
         int effective_y = (this->coordinates.y)*64 - cam_pos_y;
+        
+        //If the block is in the field of vision of the camera, it is renderized
         if(effective_x < 640 && effective_y < 640 && effective_x >= -63 && effective_y >= -63){
 
-            //Set rendering space and render to screen
+            //Set rendering space 
             SDL_Rect renderQuad = {effective_x, effective_y, 64, 64};
-            SDL_RenderCopy(screenRenderer, texture, NULL, &renderQuad);
+            //Render block to the screen
+            SDL_RenderCopy(screenRenderer, this->texture, NULL, &renderQuad);
         }
     }
 
+    //Getters and setters of the class Block
     MapCoordinates Block::getCoordinates()
     {
         return this->coordinates;
@@ -58,23 +66,30 @@ namespace display{
 //----------------------------------- Player ---------------------------------------------
 	Player::Player()
     {
-        this->position = {0.5,-64};
+        this->position = {0,-1};
     }
 
+    //Load file needed to render the driller on the screen
 	bool Player::loadMedias(std::string path, SDL_Renderer* screenRenderer)
 	{
 		std::string filename = path + "/player.png";
 
 		SDL_Surface* loadedSurface = IMG_Load(filename.c_str());
+        
+        /*Sets color keying on the driller to magenta, it allows the background of the 
+          driller png image (the file /player.png*) to be transparent on the screen*/
 		SDL_SetColorKey(loadedSurface, SDL_TRUE, SDL_MapRGB(loadedSurface->format, 0xFF, 0, 0xFF));
 
+        //Creates texture and free old loaded surface 
 		this->player_texture = SDL_CreateTextureFromSurface(screenRenderer, loadedSurface);
 		SDL_FreeSurface(loadedSurface);
 		return true;
 	}
 
+	//Renders the main player (the driller) into the scrren
     void Player::render(SDL_Renderer* screenRenderer, int cam_pos_x, int cam_pos_y)
     {
+        //The implementation of this method is quite simillar it's equivalent in the Block class
         int effective_x = (this->position.x) - cam_pos_x;
         int effective_y = (this->position.y) - cam_pos_y;
         if(effective_x < 640 && effective_y < 640 && effective_x >= -63 && effective_y >= -63){
@@ -85,6 +100,7 @@ namespace display{
 		}
     }
 
+    //Getters and setters of the player class
     MapPosition Player::getPosition()
     {
         return this->position;
@@ -106,7 +122,8 @@ namespace display{
 	}
 
 //--------------------------------- BACKGROUND ---------------------------------------
-
+    
+    //Class responsible for load a single file specified by the 'path' argument into the texture given as an argument of the method
     bool BackGround::loadFromFile(std::string path, SDL_Renderer* screenRenderer, SDL_Texture** texture)
     {
         //The final texture
@@ -141,6 +158,8 @@ namespace display{
         return (*texture)!= NULL;
     }
     
+    /*Load all the medias needed to render the background of the game into the texture atributes of the class,
+     if all of the files are loaded correctly the method returns true, otherwise it returns false*/
     bool BackGround::loadMedias(std::string path, SDL_Renderer* screenRenderer)
     {
         bool success = true;
@@ -153,6 +172,7 @@ namespace display{
         std::string fileTin = path + "/tin_block.png";
         std::string fileHole = path + "/hole_block.png";
         
+        // Checks if the files are loaded correctly 
         if(!loadFromFile(fileDiamond, screenRenderer, &diamond)){
             logmsg.error_msg("Failed to load diamond_block.png texture image!");
             success = false;
@@ -185,8 +205,11 @@ namespace display{
         return success;
     }
     
+    //Initializes all of the blocks that make up the background of the game
     void BackGround::initBackGround()
-    {
+    {   
+        /*This block of code introduces randomness at the generation of the 
+          background of the scenario*/
         std::default_random_engine generator;
         std::uniform_int_distribution<int> distribution(0,4095);
         generator.seed((int)time(NULL));
@@ -202,6 +225,9 @@ namespace display{
                 
                 int dice_roll = distribution(generator);
                 
+                /*To make up the scenario, we choose something like an exponential
+                 *distribution of the blocks, such that, the blocks with greater value
+                 *appear less, and the blocks with smaller valuer apear more*/
                 if(dice_roll >= 0 && dice_roll <= 15){
                     type = Diamond;
                     texture = this->diamond; 
@@ -238,23 +264,27 @@ namespace display{
                     logmsg.debug_msg(msg_error.str(), 0);
                 }
                 
+                // Generates the block and put it on the vector that represents the background itself
                 std::unique_ptr<Block> newBlock(new Block(texture, type, coordinates));
                 backGrdObj.push_back(std::move(newBlock));
             }
         }        
     }
     
+    /* Given the coordinates of a block, turns tha block into a hole, indicating tha the driller 
+     * has passed over that block */
     int BackGround::digHole(int block_pos_x, int block_pos_y)
     {
         if(block_pos_x < 0 || block_pos_x >= 10 || block_pos_y < 0 || block_pos_y >= 10000){
-            logmsg.error_msg("There's no block in such position");
             return 0;
         }
         
-        int score;
+        int score = 0;
+        // Calculates the position the block at the vector using it's coordinates
         int real_pos = 10*block_pos_y + block_pos_x;
         BlockType actual_block = this->backGrdObj[real_pos]->getType();
         
+        // Decides the score of the player based on the block that was drilled
         switch(actual_block){
             case Earth:
             score = 0;
@@ -281,30 +311,37 @@ namespace display{
             break;           
         }
         
+        // Sets the block drilled to a hole
         this->backGrdObj[real_pos]->setType(Hole);
         this->backGrdObj[real_pos]->setTexture(this->hole);
         return score;
     }
     
+    // Renders the entire background in the field of vision of the camera
     void BackGround::render(SDL_Renderer* screenRenderer, int cam_pos_x, int cam_pos_y)
     {
+        //Calls the render method of each block that makes up the scenario
         for(int i = 0; i < backGrdObj.size(); i++){
             backGrdObj[i]->render(screenRenderer, cam_pos_x, cam_pos_y);
         }
     }
 
 //-------------------------------- SCREEEN MANAGER ------------------------------------------
+
+    //Contructor of the screen manager, initializes all of the atributes of the class
     ScreenManager::ScreenManager(int dim_x, int dim_y)
     {
+        //Defines the dimensions of the screen
         this->screenWidth = dim_x;
         this->screenHeight = dim_y;
+        //Initializes the render e the window of the game
         gameRenderer = NULL;
         gameWindow = NULL;
     }
 
     ScreenManager::~ScreenManager()
     {
-        //Destroy window	
+        //Destroys window	
         SDL_DestroyRenderer(gameRenderer);
         SDL_DestroyWindow(gameWindow);
         gameWindow = NULL;
@@ -315,12 +352,13 @@ namespace display{
         SDL_Quit();
     }
     
+    //Initializes the screen manager
     bool ScreenManager::init()
     {
         //Initialization flag
         bool success = true;
 
-        //Initialize SDL
+        //Initializes SDL
         if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
         {
             std::stringstream msg_error;
@@ -330,13 +368,13 @@ namespace display{
         }
         else
         {
-            //Set texture filtering to linear
+            //Sets texture filtering to linear
             if( !SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "1" ) )
             {
                 logmsg.error_msg("Warning: Linear texture filtering not enabled!");
             }
 
-            //Create window
+            //Creates window
             gameWindow = SDL_CreateWindow( "Motherdimas", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screenWidth, screenHeight, SDL_WINDOW_SHOWN );
             if( gameWindow == NULL )
             {
@@ -347,7 +385,7 @@ namespace display{
             }
             else
             {
-                //Create renderer for window
+                //Creates renderer for the window
                 gameRenderer = SDL_CreateRenderer( gameWindow, -1, SDL_RENDERER_ACCELERATED );
                 if( gameRenderer == NULL )
                 {
@@ -358,7 +396,7 @@ namespace display{
                 }
                 else
                 {
-                    //Initialize renderer color ---------------- SUJEITO A MUDANÇA -------------
+                    //Initialize renderer color of the window to cyan
                     SDL_SetRenderDrawColor( gameRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
 
                     //Initialize PNG loading
@@ -379,11 +417,12 @@ namespace display{
 
     void ScreenManager::clearScreen()
     {
-        //Clear screen
+        //Sets color of the window to cyan and clear screen
         SDL_SetRenderDrawColor( gameRenderer, 0, 0xFF, 0xFF, 0xFF );
         SDL_RenderClear( gameRenderer );
     }
 
+    //Getters and setters of the screen manager
     void ScreenManager::updateScreen()
     {
         SDL_RenderPresent( gameRenderer );

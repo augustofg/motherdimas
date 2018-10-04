@@ -13,7 +13,7 @@ namespace msglog
 {
 	class msglog
 	{
-		std::atomic_int32_t dbg_level;
+        std::atomic<std::int32_t> dbg_level;
 		std::mutex log_mutex;
 	public:
 		msglog();

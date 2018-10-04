@@ -53,6 +53,7 @@ namespace sound
 			std::stringstream dbgmsg;
 			dbgmsg << "(0x" << this << ") Sound halted by an external event";
 			logmsg.debug_msg(dbgmsg.str(), 1);
+			Mix_HaltChannel(this->channel);
 			return;
 		}
 
@@ -85,9 +86,10 @@ namespace sound
 			return -1;
 		}
 
+		this->stop();
+
 		if (this->play_thread.get() != nullptr)
 		{
-			this->halt_sound_var.notify_all();
 			this->play_thread->join();
 		}
 
