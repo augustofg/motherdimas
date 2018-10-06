@@ -1,5 +1,9 @@
 #include <iostream>
 #include <string>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <atomic>
 
 #include "display/display.hpp"
 #include "docopt.h"
@@ -9,6 +13,7 @@
 
 msglog::msglog logmsg;
 using namespace display;
+using namespace std::chrono_literals;
 
 static const char _USAGE[] =
     R"(MotherDimas.
@@ -94,108 +99,135 @@ int main(int argc, char *argv[])
 
 	bool arrow_up_was_pressed = false;
 	bool arrow_down_was_pressed = false;
-	int score;
+	int score = 0;
 
 	MapPosition pos;
 	pos.x = 0;
 	pos.y = -64;
 	drill.setPosition(pos);
 
+	std::condition_variable exit_render_var;
+	std::mutex mutex_render;
+	std::atomic<bool> exit_render{false};
+
+	/*
+	 * Render thread
+	 */
+	std::thread render_thread([&manager, &scenario, &drill, &cam_pos_x, &cam_pos_y, &exit_render_var, &mutex_render, &exit_render]
+								  {
+									  /*
+									   * Update the screen contents
+									   */
+									  std::unique_lock<std::mutex> lk(mutex_render);
+									  SDL_Renderer* gameRenderer = manager.getGameRenderer();
+
+									  while (1)
+									  {
+										  manager.clearScreen();
+										  scenario.render(gameRenderer, cam_pos_x, cam_pos_y);
+										  drill.render(gameRenderer, cam_pos_x, cam_pos_y);
+										  manager.updateScreen();
+
+										  /*
+										   * Wait for 33ms or for a notification to exit
+										   */
+										  if (exit_render_var.wait_for(lk, 33*1ms, [&exit_render]{return exit_render.load();}))
+										  {
+											  break;
+										  }
+									  }
+								  });
+
     //While application is running
     while(!quit){
 
         //Handle events on queue
-        while(SDL_PollEvent(&event) != 0){
-            if(event.type == SDL_QUIT){
-                quit = true;
-            }
-            else if(event.type == SDL_KEYDOWN){
+		SDL_WaitEvent(&event);
+		if(event.type == SDL_QUIT)
+		{
+			quit = true;
+		}
+		else if(event.type == SDL_KEYDOWN){
 
-                switch(event.key.keysym.sym){
-					/*
-					 * Move the drill down if the down arrow is
-					 * pressed
-					 */
-				case SDLK_UP:
-					if(!arrow_up_was_pressed)
-					{
-						rocket_sample.play(10, 10, -1);
-						arrow_up_was_pressed = true;
-					}
-					cam_pos_y -= 64;
-					position = drill.getPosition();
-					position.y -= 64;
-					drill.setPosition(position);
-                    break;
+			switch(event.key.keysym.sym){
+				/*
+				 * Move the drill down if the down arrow is
+				 * pressed
+				 */
+			case SDLK_UP:
+				if(!arrow_up_was_pressed)
+				{
+					rocket_sample.play(10, 10, -1);
+					arrow_up_was_pressed = true;
+				}
+				cam_pos_y -= 64;
+				position = drill.getPosition();
+				position.y -= 64;
+				drill.setPosition(position);
+				break;
 
-					/*
-					 * Move the drill up if the up arrow is pressed
-					 */
-				case SDLK_DOWN:
-					if(!arrow_down_was_pressed)
-					{
-						drill_sample.play(400, 600);
-						arrow_down_was_pressed = true;
-					}
-                    cam_pos_y += 64;
-                    position = drill.getPosition();
-                    position.y += 64;
-                    drill.setPosition(position);
-					score += scenario.digHole(position.x / 64, position.y / 64);
-                    break;
+				/*
+				 * Move the drill up if the up arrow is pressed
+				 */
+			case SDLK_DOWN:
+				if(!arrow_down_was_pressed)
+				{
+					drill_sample.play(400, 600);
+					arrow_down_was_pressed = true;
+				}
+				cam_pos_y += 64;
+				position = drill.getPosition();
+				position.y += 64;
+				drill.setPosition(position);
+				score += scenario.digHole(position.x / 64, position.y / 64);
+				break;
 
-					/*
-					 * Move the drill to the left if the left arrow is
-					 * pressed
-					 */
-				case SDLK_LEFT:
-                    position = drill.getPosition();
-                    position.x -= 64;
-                    drill.setPosition(position);
-                    break;
+				/*
+				 * Move the drill to the left if the left arrow is
+				 * pressed
+				 */
+			case SDLK_LEFT:
+				position = drill.getPosition();
+				position.x -= 64;
+				drill.setPosition(position);
+				break;
 
-					/*
-					 * Move the drill to the right if the right arrow is
-					 * pressed
-					 */
-				case SDLK_RIGHT:
-                    position = drill.getPosition();
-                    position.x += 64;
-                    drill.setPosition(position);
-                    break;
-                }
-            }
-			/*
-			 * Stop the sound effects when the keys are released
-			 */
-			else if(event.type == SDL_KEYUP){
-                switch(event.key.keysym.sym){
-				case SDLK_UP:
-					if (arrow_up_was_pressed)
-					{
-						rocket_sample.stop();
-						arrow_up_was_pressed = false;
-					}
-                    break;
-				case SDLK_DOWN:
-					if (arrow_down_was_pressed)
-					{
-						arrow_down_was_pressed = false;
-					}
-                    break;
-                }
-            }
-        }
-
+				/*
+				 * Move the drill to the right if the right arrow is
+				 * pressed
+				 */
+			case SDLK_RIGHT:
+				position = drill.getPosition();
+				position.x += 64;
+				drill.setPosition(position);
+				break;
+			}
+		}
 		/*
-		 * Update the screen contents
+		 * Stop the sound effects when the keys are released
 		 */
-        manager.clearScreen();
-        scenario.render(gameRenderer, cam_pos_x, cam_pos_y);
-        drill.render(gameRenderer, cam_pos_x, cam_pos_y);
-        manager.updateScreen();
-    }
+		else if(event.type == SDL_KEYUP){
+			switch(event.key.keysym.sym){
+			case SDLK_UP:
+				if (arrow_up_was_pressed)
+				{
+					rocket_sample.stop();
+					arrow_up_was_pressed = false;
+				}
+				break;
+			case SDLK_DOWN:
+				if (arrow_down_was_pressed)
+				{
+					arrow_down_was_pressed = false;
+				}
+				break;
+			}
+		}
+	}
 
 	std::cout << "You died!" << std::endl << "Score: " << score << std::endl;
+	exit_render = true;
+	exit_render_var.notify_one();
+	render_thread.join();
     return 0;
 }
