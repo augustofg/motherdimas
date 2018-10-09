@@ -5,6 +5,13 @@
 #include <condition_variable>
 #include <atomic>
 
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 #include "display/display.hpp"
 #include "docopt.h"
 #include "utils/msglog.hpp"
@@ -138,16 +145,38 @@ int main(int argc, char *argv[])
 									  }
 								  });
 
+    // Creates and initializes socket
+    int socket_fd, connection_fd;
+    struct sockaddr_in myself, client;
+    socklen_t client_size = (socklen_t)sizeof(client);
+
+    socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+    printf("Socket criado\n");
+
+    myself.sin_family = AF_INET;
+    myself.sin_port = htons(3002);
+    inet_aton("127.0.0.1", &(myself.sin_addr));
+
+    printf("Tentando abrir porta 3002\n");
+    if (bind(socket_fd, (struct sockaddr*)&myself, sizeof(myself)) != 0) {
+        printf("Problemas ao abrir porta\n");
+        return 0;
+    }
+    printf("Abri porta 3002!\n");
+
+    listen(socket_fd, 2);
+    printf("Estou ouvindo na porta 3002!\n");
+
     //While application is running
     while(!quit){
 
+        printf("Vou travar ate receber alguma coisa\n");
+        connection_fd = accept(socket_fd, (struct sockaddr*)&client, &client_size);
+        printf("Recebi uma mensagem:\n");
+
         //Handle events on queue
-		SDL_WaitEvent(&event);
-		if(event.type == SDL_QUIT)
-		{
-			quit = true;
-		}
-		else if(event.type == SDL_KEYDOWN){
+		recv(connection_fd, &event, sizeof(SDL_Event), 0);
+		if(event.type == SDL_KEYDOWN){
 
 			switch(event.key.keysym.sym){
 				/*
@@ -201,6 +230,10 @@ int main(int argc, char *argv[])
 				position.x += 64;
 				drill.setPosition(position);
 				break;
+
+            case SDLK_q:
+                quit = true;
+                break;
 			}
 		}
 		/*
@@ -225,6 +258,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	close(socket_fd);
 	std::cout << "You died!" << std::endl << "Score: " << score << std::endl;
 	exit_render = true;
 	exit_render_var.notify_one();
