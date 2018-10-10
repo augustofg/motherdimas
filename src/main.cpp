@@ -166,18 +166,22 @@ int main(int argc, char *argv[])
 
     listen(socket_fd, 2);
     printf("Estou ouvindo na porta 3002!\n");
+    
+    printf("Vou travar ate receber alguma coisa\n");
+    connection_fd = accept(socket_fd, (struct sockaddr*)&client, &client_size);
+    printf("Recebi uma mensagem:\n");
 
     //While application is running
     while(!quit){
 
-        printf("Vou travar ate receber alguma coisa\n");
-        connection_fd = accept(socket_fd, (struct sockaddr*)&client, &client_size);
-        printf("Recebi uma mensagem:\n");
-
         //Handle events on queue
 		recv(connection_fd, &event, sizeof(SDL_Event), 0);
-		if(event.type == SDL_KEYDOWN){
-
+        
+        if(event.type == SDL_QUIT){
+            quit = true;
+        }
+        
+		else if(event.type == SDL_KEYDOWN){
 			switch(event.key.keysym.sym){
 				/*
 				 * Move the drill down if the down arrow is

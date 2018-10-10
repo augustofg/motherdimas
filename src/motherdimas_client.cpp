@@ -8,8 +8,8 @@
 #include <SDL2/SDL_image.h>
 
 
-const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 640;
+const int SCREEN_WIDTH = 64;
+const int SCREEN_HEIGHT = 64;
 
 SDL_Window* gWindow = NULL;
 
@@ -72,21 +72,22 @@ int main() {
 
         /* Agora, meu socket funciona como um descritor de arquivo usual */
         SDL_Event event;
-        int exit = 0;
+        bool exit = false;
         
         while(!exit){
 
             //Handle events on queue
-            SDL_WaitEvent(&event);  
+            SDL_WaitEvent(&event); 
             send(socket_fd, &event, sizeof(SDL_Event), 0);   
             
-            if(event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_q){
-                exit = 1;
+            if(event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_q || event.type == SDL_QUIT){
+                exit = true;
             }
         }
+        
+        close(socket_fd);
     }
     
-    close(socket_fd);
     close();
     return 0;
 }
