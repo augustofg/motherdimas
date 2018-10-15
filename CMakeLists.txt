@@ -28,6 +28,6 @@ list(APPEND motherdimas_src_files src/interactions/interactions.cpp)
 list(APPEND motherdimas_src_files src/utils/msglog.cpp)
 
 add_executable(motherdimas src/main.cpp ${motherdimas_src_files})
-target_link_libraries(motherdimas m pthread SDL2 SDL2_image SDL2_mixer ${SDL2_LIBRARIES} docopt_s)
+target_link_libraries(motherdimas m pthread SDL2 SDL2_image SDL2_mixer docopt_s)
 add_executable(motherdimas_client src/motherdimas_client.cpp)
-target_link_libraries(motherdimas_client SDL2 ${SDL2_LIBRARIES})
+target_link_libraries(motherdimas_client SDL2)
